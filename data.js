@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
       if (!uid) return res.status(400).json({ error: "uid required" });
       if (b.action === "save") {
         await cmd([["HSET", "td:responses", uid, JSON.stringify({
-          name: str(b.name, 20), off: dates(b.off), offDec: dates(b.offDec), at: Date.now() })]]);
+          name: str(b.name, 20), okNov: dates(b.okNov), offDec: dates(b.offDec), at: Date.now() })]]);
       } else if (b.action === "add" && COLL.includes(b.coll)) {
         const name = str(b.name, 40);
         if (name) {
