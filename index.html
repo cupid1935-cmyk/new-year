@@ -25,6 +25,9 @@ input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);borde
 .d b{display:block;font-size:15px}.d span{font-size:12px;color:var(--muted)}
 .d.off{border-color:var(--bad);background:var(--badbg)}
 .d.off b,.d.off span{color:var(--bad)}
+.d.on{border-color:var(--ok);background:var(--okbg)}
+.d.on b,.d.on span{color:var(--ok)}
+.who.g{color:var(--ok)}
 .btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
 .btn:disabled{opacity:.5}
 .hint{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}
@@ -60,8 +63,8 @@ input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);borde
 </section>
 
 <section class="card">
-<h2>1. 11월 회식 · 불가능한 날짜</h2>
-<p class="sub" style="margin-bottom:0">참석이 어려운 날을 눌러 주세요. 없으면 선택 없이 저장하세요.</p>
+<h2>1. 11월 회식 · 선호(가능)한 날짜 <span style="font-weight:400;color:var(--muted);font-size:14px">(복수 선택)</span></h2>
+<p class="sub" style="margin-bottom:0">선호하거나 참석 가능한 날짜를 <b>여러 개 모두</b> 눌러 주세요. (복수 선택 가능) 가능한 날이 없으면 선택 없이 저장하세요.</p>
 <div class="dates" id="d-nov"></div>
 <button class="btn" id="save-nov" disabled>응답 저장</button>
 <div class="hint" id="hint-nov"></div>
@@ -104,12 +107,12 @@ input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);borde
 <script>
 (function(){
 var W=["일","월","화","수","목","금","토"];
-var SETS={nov:{field:"off",list:[["11.11","수"],["11.12","목"],["11.16","월"],["11.17","화"],["11.18","수"],["11.19","목"]]},dec:{field:"offDec",list:[]}};
+var SETS={nov:{field:"okNov",ok:true,list:[["11.11","수"],["11.12","목"],["11.16","월"],["11.17","화"],["11.18","수"],["11.19","목"]]},dec:{field:"offDec",list:[]}};
 for(var i=1;i<=18;i++){SETS.dec.list.push(["12."+i,W[(2+i-1)%7]])}
 var uid=null;try{uid=localStorage.getItem("td_uid")}catch(e){}
 if(!uid){uid="u"+Math.random().toString(36).slice(2)+Date.now().toString(36);try{localStorage.setItem("td_uid",uid)}catch(e){}}
 var D={responses:[],restaurants:[],activities:[],restaurantsVotes:[],activitiesVotes:[],partyRestaurants:[],partyRestaurantsVotes:[]};
-var mine={off:[],offDec:[]},touched=false,loaded=false,busy=false;
+var mine={okNov:[],offDec:[]},touched=false,loaded=false,busy=false;
 var $=function(i){return document.getElementById(i)};
 function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
 function nameOk(){return $("nm").value.trim()}
@@ -119,13 +122,13 @@ function load(){if(document.hidden&&loaded)return;fetch("/api/data",{cache:"no-s
 function apply(d){
   D=d;loaded=true;$("warn").innerHTML="";
   var me=d.responses.filter(function(r){return r.id===uid})[0];
-  if(me&&!touched){mine={off:(me.off||[]).slice(),offDec:(me.offDec||[]).slice()};if(!$("nm").value)$("nm").value=me.name||"";renderDates("nov");renderDates("dec")}
+  if(me&&!touched){mine={okNov:(me.okNov||[]).slice(),offDec:(me.offDec||[]).slice()};if(!$("nm").value)$("nm").value=me.name||"";renderDates("nov");renderDates("dec")}
   renderSummary("nov");renderSummary("dec");LR.render();LA.render();LP.render();updBtns();
 }
 function renderDates(k){
   var S=SETS[k],h="";
   S.list.forEach(function(d){var off=mine[S.field].indexOf(d[0])>-1;
-    h+='<button class="d'+(off?' off':'')+'" data-d="'+d[0]+'"><b>'+d[0]+'</b><span>'+d[1]+(off?' · 불가':'')+'</span></button>'});
+    h+='<button class="d'+(off?(S.ok?' on':' off'):'')+'" data-d="'+d[0]+'"><b>'+d[0]+'</b><span>'+d[1]+(off?(S.ok?' · 가능':' · 불가'):'')+'</span></button>'});
   $("d-"+k).innerHTML=h;
   Array.prototype.forEach.call($("d-"+k).children,function(b){b.onclick=function(){
     var a=mine[S.field],key=b.getAttribute("data-d"),i=a.indexOf(key);
@@ -135,16 +138,16 @@ function renderSummary(k){
   var S=SETS[k],R=D.responses,n=R.length;
   $("cnt-"+k).textContent=n?"(응답 "+n+"명)":"";
   if(!n){$("sum-"+k).innerHTML='<div class="empty">아직 응답이 없어요.</div>';return}
-  var rows=S.list.map(function(d){var no=R.filter(function(r){return (r[S.field]||[]).indexOf(d[0])>-1});return {d:d,no:no,ok:n-no.length}});
+  var rows=S.list.map(function(d){var has=R.filter(function(r){return (r[S.field]||[]).indexOf(d[0])>-1});return {d:d,names:has,ok:S.ok?has.length:n-has.length,no:S.ok?n-has.length:has.length}});
   var max=Math.max.apply(null,rows.map(function(r){return r.ok}));
   $("sum-"+k).innerHTML=rows.map(function(r){
-    var h='<div class="row"><span class="dt'+(r.ok===max?' best':'')+'">'+r.d[0]+' ('+r.d[1]+')</span><div class="bar"><i style="width:'+(r.ok/n*100)+'%"></i></div><span class="ct">가능 '+r.ok+' / 불가 '+r.no.length+'</span></div>';
-    if(r.no.length)h+='<div class="who">불가: '+r.no.map(function(x){return esc(x.name||"이름없음")}).join(", ")+'</div>';
+    var h='<div class="row"><span class="dt'+(r.ok===max&&max>0?' best':'')+'">'+r.d[0]+' ('+r.d[1]+')</span><div class="bar"><i style="width:'+(r.ok/n*100)+'%"></i></div><span class="ct">'+(S.ok?'가능 '+r.ok+'명':'가능 '+r.ok+' / 불가 '+r.no)+'</span></div>';
+    if(r.names.length)h+='<div class="who'+(S.ok?' g':'')+'">'+(S.ok?'가능: ':'불가: ')+r.names.map(function(x){return esc(x.name||"이름없음")}).join(", ")+'</div>';
     return h}).join("");
 }
 function saveAll(k){
   if(!nameOk())return;var hint=$("hint-"+k);busy=true;updBtns();
-  post({action:"save",name:nameOk(),off:mine.off,offDec:mine.offDec}).then(function(){touched=false;hint.textContent="저장되었어요. 일정이 바뀌면 다시 저장하면 덮어써져요. (11월·12월 응답이 함께 저장돼요)"})
+  post({action:"save",name:nameOk(),okNov:mine.okNov,offDec:mine.offDec}).then(function(){touched=false;hint.textContent="저장되었어요. 일정이 바뀌면 다시 저장하면 덮어써져요. (11월·12월 응답이 함께 저장돼요)"})
   .catch(function(){hint.textContent="저장하지 못했어요. 다시 시도해 주세요."}).then(function(){busy=false;updBtns()});
 }
 $("save-nov").onclick=function(){saveAll("nov")};
