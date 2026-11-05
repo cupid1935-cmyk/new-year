@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>팀 회식·송년회 조사</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--text:#2a2420;--muted:#7a6f66;--line:#e8e0d6;--accent:#e8590c;--accentbg:#fff0e6;--bad:#c92a2a;--badbg:#ffe3e3;--ok:#2b8a3e;--okbg:#e6f6ea;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1815;--card:#26221e;--text:#f1ebe4;--muted:#a79d93;--line:#3a342e;--accent:#ff8c42;--accentbg:#3a2a1e;--bad:#ff8787;--badbg:#3d2323;--ok:#69db7c;--okbg:#1f3324}}
+:root[data-theme="dark"]{--bg:#1b1815;--card:#26221e;--text:#f1ebe4;--muted:#a79d93;--line:#3a342e;--accent:#ff8c42;--accentbg:#3a2a1e;--bad:#ff8787;--badbg:#3d2323;--ok:#69db7c;--okbg:#1f3324}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.5}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:4px 0 4px}
+h2{font-size:17px;margin:0 0 4px}
+h3{font-size:14px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label.n{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
+.dates{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin:12px 0}
+.d{border:1.5px solid var(--line);background:var(--bg);color:var(--text);border-radius:12px;padding:8px 4px;font:inherit;cursor:pointer;text-align:center}
+.d b{display:block;font-size:15px}.d span{font-size:12px;color:var(--muted)}
+.d.off{border-color:var(--bad);background:var(--badbg)}
+.d.off b,.d.off span{color:var(--bad)}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.5}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}
+.sum{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.row{display:flex;align-items:center;gap:10px;font-size:14px}
+.row .dt{width:84px;font-weight:600;flex:none}
+.bar{flex:1;height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok)}
+.row .ct{width:96px;text-align:right;color:var(--muted);font-size:13px;flex:none}
+.who{font-size:12px;color:var(--bad);margin:-2px 0 4px 94px}
+.best{background:var(--okbg);border-radius:8px;padding:2px 6px}
+.add{display:flex;gap:8px;margin:10px 0 14px}
+.add input{flex:1}
+.r{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.r .nm{flex:1;min-width:0;word-break:break-word}
+.r .by{font-size:12px;color:var(--muted)}
+.up{border:1.5px solid var(--line);background:var(--bg);color:var(--text);border-radius:999px;padding:6px 12px;font:inherit;cursor:pointer;white-space:nowrap}
+.up.on{border-color:var(--accent);background:var(--accentbg);color:var(--accent);font-weight:700}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px}
+.empty,.note{color:var(--muted);font-size:14px;padding:8px 0}
+.note{background:var(--accentbg);border-radius:10px;padding:10px 12px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<main>
+<h1>🍻 팀 회식·송년회 조사</h1>
+<p class="sub">11월 회식과 12월 송년회 일정, 그리고 의견을 모아요.</p>
+<div id="warn"></div>
+
+<section class="card">
+<label class="n" for="nm">내 이름 (아래 일정 응답에 함께 저장돼요)</label>
+<input type="text" id="nm" maxlength="20" placeholder="이름을 입력하세요">
+</section>
+
+<section class="card">
+<h2>1. 11월 회식 · 불가능한 날짜</h2>
+<p class="sub" style="margin-bottom:0">참석이 어려운 날을 눌러 주세요. 없으면 선택 없이 저장하세요.</p>
+<div class="dates" id="d-nov"></div>
+<button class="btn" id="save-nov" disabled>응답 저장</button>
+<div class="hint" id="hint-nov"></div>
+<h3>취합 현황 <span id="cnt-nov" class="sub"></span></h3>
+<div class="sum" id="sum-nov"></div>
+</section>
+
+<section class="card">
+<h2>2. 11월 회식 · 가보고 싶었던 식당</h2>
+<p class="sub" style="margin-bottom:0">식당을 추가하고, 마음에 드는 곳에 👍를 눌러 주세요. (복수 가능)</p>
+<div class="add"><input type="text" id="in-r" maxlength="40" placeholder="식당 이름 (예: 동성로 OO고깃집)"><button class="btn" id="add-r" disabled>추가</button></div>
+<div id="list-r"></div>
+</section>
+
+<section class="card">
+<h2>3. 송년회 · 불가능한 날짜 (12.1~12.18)</h2>
+<p class="sub" style="margin-bottom:0">참석이 어려운 날을 눌러 주세요. 없으면 선택 없이 저장하세요.</p>
+<div class="dates" id="d-dec"></div>
+<button class="btn" id="save-dec" disabled>응답 저장</button>
+<div class="hint" id="hint-dec"></div>
+<h3>취합 현황 <span id="cnt-dec" class="sub"></span></h3>
+<div class="sum" id="sum-dec"></div>
+</section>
+
+<section class="card">
+<h2>4. 송년회에서 해보고 싶은 체험</h2>
+<p class="sub" style="margin-bottom:0">하고 싶은 체험에 👍를 눌러 주세요. 아이디어도 자유롭게 추가해 주세요. (복수 가능)</p>
+<div class="add"><input type="text" id="in-a" maxlength="40" placeholder="체험 아이디어 (예: 방탈출)"><button class="btn" id="add-a" disabled>추가</button></div>
+<div id="list-a"></div>
+</section>
+
+<section class="card">
+<h2>5. 송년회 · 가보고 싶은 식당</h2>
+<p class="sub" style="margin-bottom:0">송년회 장소로 가보고 싶은 식당을 추가하고, 마음에 드는 곳에 👍를 눌러 주세요. (복수 가능)</p>
+<div class="add"><input type="text" id="in-y" maxlength="40" placeholder="식당 이름 (예: 수성못 OO한정식)"><button class="btn" id="add-y" disabled>추가</button></div>
+<div id="list-y"></div>
+</section>
+</main>
+
+<script>
+(function(){
+var W=["일","월","화","수","목","금","토"];
+var SETS={nov:{field:"off",list:[["11.11","수"],["11.12","목"],["11.16","월"],["11.17","화"],["11.18","수"],["11.19","목"]]},dec:{field:"offDec",list:[]}};
+for(var i=1;i<=18;i++){SETS.dec.list.push(["12."+i,W[(2+i-1)%7]])}
+var uid=null;try{uid=localStorage.getItem("td_uid")}catch(e){}
+if(!uid){uid="u"+Math.random().toString(36).slice(2)+Date.now().toString(36);try{localStorage.setItem("td_uid",uid)}catch(e){}}
+var D={responses:[],restaurants:[],activities:[],restaurantsVotes:[],activitiesVotes:[],partyRestaurants:[],partyRestaurantsVotes:[]};
+var mine={off:[],offDec:[]},touched=false,loaded=false,busy=false;
+var $=function(i){return document.getElementById(i)};
+function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function nameOk(){return $("nm").value.trim()}
+function updBtns(){var ok=!!nameOk();$("save-nov").disabled=!ok||busy;$("save-dec").disabled=!ok||busy;$("add-r").disabled=!$("in-r").value.trim();$("add-a").disabled=!$("in-a").value.trim();$("add-y").disabled=!$("in-y").value.trim()}
+function post(body){body.uid=uid;return fetch("/api/data",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(apply)}
+function load(){if(document.hidden&&loaded)return;fetch("/api/data",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(apply).catch(function(){if(!loaded)$("warn").innerHTML='<div class="note">데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요.</div>'})}
+function apply(d){
+  D=d;loaded=true;$("warn").innerHTML="";
+  var me=d.responses.filter(function(r){return r.id===uid})[0];
+  if(me&&!touched){mine={off:(me.off||[]).slice(),offDec:(me.offDec||[]).slice()};if(!$("nm").value)$("nm").value=me.name||"";renderDates("nov");renderDates("dec")}
+  renderSummary("nov");renderSummary("dec");LR.render();LA.render();LP.render();updBtns();
+}
+function renderDates(k){
+  var S=SETS[k],h="";
+  S.list.forEach(function(d){var off=mine[S.field].indexOf(d[0])>-1;
+    h+='<button class="d'+(off?' off':'')+'" data-d="'+d[0]+'"><b>'+d[0]+'</b><span>'+d[1]+(off?' · 불가':'')+'</span></button>'});
+  $("d-"+k).innerHTML=h;
+  Array.prototype.forEach.call($("d-"+k).children,function(b){b.onclick=function(){
+    var a=mine[S.field],key=b.getAttribute("data-d"),i=a.indexOf(key);
+    if(i>-1)a.splice(i,1);else a.push(key);touched=true;renderDates(k)}});
+}
+function renderSummary(k){
+  var S=SETS[k],R=D.responses,n=R.length;
+  $("cnt-"+k).textContent=n?"(응답 "+n+"명)":"";
+  if(!n){$("sum-"+k).innerHTML='<div class="empty">아직 응답이 없어요.</div>';return}
+  var rows=S.list.map(function(d){var no=R.filter(function(r){return (r[S.field]||[]).indexOf(d[0])>-1});return {d:d,no:no,ok:n-no.length}});
+  var max=Math.max.apply(null,rows.map(function(r){return r.ok}));
+  $("sum-"+k).innerHTML=rows.map(function(r){
+    var h='<div class="row"><span class="dt'+(r.ok===max?' best':'')+'">'+r.d[0]+' ('+r.d[1]+')</span><div class="bar"><i style="width:'+(r.ok/n*100)+'%"></i></div><span class="ct">가능 '+r.ok+' / 불가 '+r.no.length+'</span></div>';
+    if(r.no.length)h+='<div class="who">불가: '+r.no.map(function(x){return esc(x.name||"이름없음")}).join(", ")+'</div>';
+    return h}).join("");
+}
+function saveAll(k){
+  if(!nameOk())return;var hint=$("hint-"+k);busy=true;updBtns();
+  post({action:"save",name:nameOk(),off:mine.off,offDec:mine.offDec}).then(function(){touched=false;hint.textContent="저장되었어요. 일정이 바뀌면 다시 저장하면 덮어써져요. (11월·12월 응답이 함께 저장돼요)"})
+  .catch(function(){hint.textContent="저장하지 못했어요. 다시 시도해 주세요."}).then(function(){busy=false;updBtns()});
+}
+$("save-nov").onclick=function(){saveAll("nov")};
+$("save-dec").onclick=function(){saveAll("dec")};
+$("nm").oninput=function(){touched=true;updBtns()};
+function makeList(cfg){
+  function render(){
+    var box=$(cfg.list),items=D[cfg.coll],votes=D[cfg.coll+"Votes"];
+    if(!items.length){box.innerHTML='<div class="empty">아직 추천이 없어요. 첫 아이디어를 추가해 보세요!</div>';return}
+    var cnt={},my={};
+    votes.forEach(function(v){(v.ids||[]).forEach(function(id){cnt[id]=(cnt[id]||0)+1;if(v.id===uid)my[id]=1})});
+    var s=items.slice().sort(function(a,b){return (cnt[b.id]||0)-(cnt[a.id]||0)||(a.at||0)-(b.at||0)});
+    box.innerHTML=s.map(function(r,i){var c=cnt[r.id]||0;
+      return '<div class="r"><div class="nm">'+(c&&i===0?'🥇 ':'')+esc(r.name)+'<div class="by">추천: '+esc(r.by||"익명")+'</div></div>'+
+      '<button class="up'+(my[r.id]?' on':'')+'" data-v="'+r.id+'">👍 '+c+'</button>'+
+      (r.uid===uid?'<button class="x" data-x="'+r.id+'" title="삭제">✕</button>':'')+'</div>'}).join("");
+    Array.prototype.forEach.call(box.querySelectorAll("[data-v]"),function(b){b.onclick=function(){
+      var ids=Object.keys(my),id=b.getAttribute("data-v"),i=ids.indexOf(id);
+      if(i>-1)ids.splice(i,1);else ids.push(id);
+      post({action:"vote",coll:cfg.coll,ids:ids}).catch(function(){})}});
+    Array.prototype.forEach.call(box.querySelectorAll("[data-x]"),function(b){b.onclick=function(){
+      post({action:"del",coll:cfg.coll,id:b.getAttribute("data-x")}).catch(function(){})}});
+  }
+  function add(){var v=$(cfg.input).value.trim();if(!v)return;
+    post({action:"add",coll:cfg.coll,name:v,by:nameOk()}).then(function(){$(cfg.input).value="";updBtns()}).catch(function(){})}
+  $(cfg.btn).onclick=add;$(cfg.input).oninput=updBtns;
+  $(cfg.input).onkeydown=function(e){if(e.key==="Enter")add()};
+  return {render:render};
+}
+var LR=makeList({coll:"restaurants",list:"list-r",input:"in-r",btn:"add-r"});
+var LA=makeList({coll:"activities",list:"list-a",input:"in-a",btn:"add-a"});
+var LP=makeList({coll:"partyRestaurants",list:"list-y",input:"in-y",btn:"add-y"});
+["nov","dec"].forEach(function(k){renderDates(k);renderSummary(k)});
+LR.render();LA.render();LP.render();updBtns();
+load();setInterval(load,5000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden)load()});
+})();
+</script>
+</body>
+</html>
