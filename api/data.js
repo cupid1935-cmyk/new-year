@@ -1,7 +1,7 @@
 // Vercel Serverless Function — Upstash Redis(REST)에 팀 응답을 저장합니다.
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const COLL = ["restaurants", "activities", "partyRestaurants"];
+const COLL = ["restaurants", "activities", "partyRestaurants", "movies"];
 const SEEDS = ["🎳 볼링", "🎬 영화 관람", "🎭 뮤지컬", "🎻 연주회"];
 
 async function cmd(cmds) {
@@ -25,6 +25,7 @@ const readAll = () => cmd([
   ["HGETALL", "td:responses"], ["HGETALL", "td:restaurants"], ["HGETALL", "td:activities"],
   ["HGETALL", "td:restaurantsVotes"], ["HGETALL", "td:activitiesVotes"],
   ["HGETALL", "td:partyRestaurants"], ["HGETALL", "td:partyRestaurantsVotes"],
+  ["HGETALL", "td:movies"], ["HGETALL", "td:moviesVotes"],
 ]);
 async function state() {
   let r = await readAll();
@@ -37,6 +38,7 @@ async function state() {
     responses: toList(r[1]), restaurants: toList(r[2]), activities: toList(r[3]),
     restaurantsVotes: toList(r[4]), activitiesVotes: toList(r[5]),
     partyRestaurants: toList(r[6]), partyRestaurantsVotes: toList(r[7]),
+    movies: toList(r[8]), moviesVotes: toList(r[9]),
   };
 }
 const str = (s, n) => String(s || "").trim().slice(0, n);
