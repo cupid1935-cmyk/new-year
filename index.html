@@ -27,7 +27,6 @@ input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);borde
 .d.off b,.d.off span{color:var(--bad)}
 .d.on{border-color:var(--ok);background:var(--okbg)}
 .d.on b,.d.on span{color:var(--ok)}
-.who.g{color:var(--ok)}
 .btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
 .btn:disabled{opacity:.5}
 .hint{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}
@@ -38,6 +37,7 @@ input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);borde
 .bar i{display:block;height:100%;background:var(--ok)}
 .row .ct{width:96px;text-align:right;color:var(--muted);font-size:13px;flex:none}
 .who{font-size:12px;color:var(--bad);margin:-2px 0 4px 94px}
+.who.g{color:var(--ok)}
 .best{background:var(--okbg);border-radius:8px;padding:2px 6px}
 .add{display:flex;gap:8px;margin:10px 0 14px}
 .add input{flex:1}
@@ -102,6 +102,13 @@ input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);borde
 <div class="add"><input type="text" id="in-y" maxlength="40" placeholder="식당 이름 (예: 수성못 OO한정식)"><button class="btn" id="add-y" disabled>추가</button></div>
 <div id="list-y"></div>
 </section>
+
+<section class="card">
+<h2>6. 송년회 · 같이 보고 싶은 영화</h2>
+<p class="sub" style="margin-bottom:0">송년회에서 볼 영화를 추천해 주세요. 보고 싶은 영화에 👍를 눌러 주세요. (복수 가능)</p>
+<div class="add"><input type="text" id="in-m" maxlength="40" placeholder="영화 제목"><button class="btn" id="add-m" disabled>추가</button></div>
+<div id="list-m"></div>
+</section>
 </main>
 
 <script>
@@ -111,19 +118,21 @@ var SETS={nov:{field:"okNov",ok:true,list:[["11.11","수"],["11.12","목"],["11.
 for(var i=1;i<=18;i++){var w=(2+i-1)%7;if(w===0||w===6)continue;SETS.dec.list.push(["12."+i,W[w]])}
 var uid=null;try{uid=localStorage.getItem("td_uid")}catch(e){}
 if(!uid){uid="u"+Math.random().toString(36).slice(2)+Date.now().toString(36);try{localStorage.setItem("td_uid",uid)}catch(e){}}
-var D={responses:[],restaurants:[],activities:[],restaurantsVotes:[],activitiesVotes:[],partyRestaurants:[],partyRestaurantsVotes:[]};
+var D={responses:[],restaurants:[],activities:[],restaurantsVotes:[],activitiesVotes:[],partyRestaurants:[],partyRestaurantsVotes:[],movies:[],moviesVotes:[]};
 var mine={okNov:[],offDec:[]},touched=false,loaded=false,busy=false;
 var $=function(i){return document.getElementById(i)};
 function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
 function nameOk(){return $("nm").value.trim()}
-function updBtns(){var ok=!!nameOk();$("save-nov").disabled=!ok||busy;$("save-dec").disabled=!ok||busy;$("add-r").disabled=!$("in-r").value.trim();$("add-a").disabled=!$("in-a").value.trim();$("add-y").disabled=!$("in-y").value.trim()}
+function updBtns(){var ok=!!nameOk();$("save-nov").disabled=!ok||busy;$("save-dec").disabled=!ok||busy;
+  $("add-r").disabled=!$("in-r").value.trim();$("add-a").disabled=!$("in-a").value.trim();
+  $("add-y").disabled=!$("in-y").value.trim();$("add-m").disabled=!$("in-m").value.trim()}
 function post(body){body.uid=uid;return fetch("/api/data",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(apply)}
 function load(){if(document.hidden&&loaded)return;fetch("/api/data",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(apply).catch(function(){if(!loaded)$("warn").innerHTML='<div class="note">데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요.</div>'})}
 function apply(d){
   D=d;loaded=true;$("warn").innerHTML="";
   var me=d.responses.filter(function(r){return r.id===uid})[0];
   if(me&&!touched){mine={okNov:(me.okNov||[]).slice(),offDec:(me.offDec||[]).slice()};if(!$("nm").value)$("nm").value=me.name||"";renderDates("nov");renderDates("dec")}
-  renderSummary("nov");renderSummary("dec");LR.render();LA.render();LP.render();updBtns();
+  renderSummary("nov");renderSummary("dec");LR.render();LA.render();LP.render();LM.render();updBtns();
 }
 function renderDates(k){
   var S=SETS[k],h="";
@@ -180,8 +189,9 @@ function makeList(cfg){
 var LR=makeList({coll:"restaurants",list:"list-r",input:"in-r",btn:"add-r"});
 var LA=makeList({coll:"activities",list:"list-a",input:"in-a",btn:"add-a"});
 var LP=makeList({coll:"partyRestaurants",list:"list-y",input:"in-y",btn:"add-y"});
+var LM=makeList({coll:"movies",list:"list-m",input:"in-m",btn:"add-m"});
 ["nov","dec"].forEach(function(k){renderDates(k);renderSummary(k)});
-LR.render();LA.render();LP.render();updBtns();
+LR.render();LA.render();LP.render();LM.render();updBtns();
 load();setInterval(load,5000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden)load()});
 })();
